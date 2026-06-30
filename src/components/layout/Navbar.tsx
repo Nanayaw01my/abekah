@@ -183,7 +183,7 @@ export function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login">
+                  <Link href="/auth/login" className="hidden sm:block">
                     <Button
                       variant={scrolled || !isHome ? "outline" : "ghost"}
                       size="sm"
