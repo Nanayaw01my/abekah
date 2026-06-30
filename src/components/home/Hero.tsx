@@ -1,159 +1,177 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { SearchBar } from "@/components/property/SearchBar";
-import { BadgeCheck, Star, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { MapPin, ChevronDown, Search, BadgeCheck } from "lucide-react";
+import { PROPERTY_TYPES, GHANA_LOCATIONS } from "@/lib/constants";
 
-const floatingCards = [
-  {
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=300",
-    title: "Modern Apartment",
-    price: "$2,800/mo",
-    location: "New York, NY",
-    rating: 4.9,
-  },
-  {
-    image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=300",
-    title: "Luxury Villa",
-    price: "$8,500/mo",
-    location: "Miami, FL",
-    rating: 5.0,
-  },
-  {
-    image: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300",
-    title: "Family Home",
-    price: "$4,500/mo",
-    location: "San Francisco, CA",
-    rating: 4.8,
-  },
+const featuredBadge = [
+  { label: "West Legon, Accra", price: "GHC 3,000/mo", img: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=300" },
+  { label: "East Legon, Accra", price: "GHC 2,500/mo", img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300" },
 ];
 
 export function Hero() {
+  const router = useRouter();
+  const [location, setLocation] = useState("");
+  const [propertyType, setPropertyType] = useState("all");
+  const [priceRange, setPriceRange] = useState("any");
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (location) params.set("location", location);
+    if (propertyType && propertyType !== "all") params.set("type", propertyType);
+    if (priceRange && priceRange !== "any") params.set("price", priceRange);
+    router.push(`/properties?${params.toString()}`);
+  };
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80"
-          alt="Modern luxury apartment"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-gray-900/60 to-green-900/40" />
-      </div>
+    <section className="pt-16 lg:pt-20 min-h-[85vh] bg-white flex items-center">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 w-full">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center py-12 lg:py-20">
+          {/* Left — Text & Search */}
+          <div>
+            <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-sm font-semibold px-4 py-2 rounded-full mb-5 border border-green-100">
+              <BadgeCheck className="w-4 h-4" />
+              Verified properties. Trusted landlords.
+            </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-[1280px] mx-auto px-6 py-32">
-        <div className="max-w-3xl">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm px-4 py-2 rounded-full mb-6"
-          >
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            <span>Over 50,000 verified listings nationwide</span>
-          </motion.div>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-bold text-gray-900 leading-[1.1] mb-5">
+              Find Your{" "}
+              <span className="text-green-600">Perfect</span>{" "}
+              Rental Home
+            </h1>
+            <p className="text-gray-500 text-lg mb-8 leading-relaxed max-w-lg">
+              Find a place you&apos;ll love to live. Verified properties, trusted landlords, direct contact — no agent, no stress.
+            </p>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-6"
-          >
-            Find Your{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">
-              Perfect
-            </span>{" "}
-            Rental Home
-          </motion.h1>
-
-          {/* Subheading */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-gray-200 leading-relaxed mb-10 max-w-2xl"
-          >
-            Browse verified rental properties from trusted landlords. No hidden fees. Direct
-            communication. Move in with confidence.
-          </motion.p>
-
-          {/* Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <SearchBar />
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-wrap gap-6 mt-10"
-          >
-            {[
-              { value: "50K+", label: "Properties" },
-              { value: "120K+", label: "Happy Tenants" },
-              { value: "15K+", label: "Verified Landlords" },
-              { value: "98%", label: "Satisfaction Rate" },
-            ].map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <div className="text-2xl font-bold text-white">{value}</div>
-                <div className="text-sm text-gray-300">{label}</div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Floating Property Cards */}
-        <div className="hidden xl:block absolute right-8 top-1/2 -translate-y-1/2 space-y-4">
-          {floatingCards.map((card, i) => (
-            <motion.div
-              key={card.title}
-              initial={{ opacity: 0, x: 60 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 + i * 0.15 }}
-              className="bg-white/95 backdrop-blur-md rounded-2xl p-3 flex gap-3 items-center shadow-2xl w-72 border border-white/50"
-            >
-              <img
-                src={card.image}
-                alt={card.title}
-                className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <BadgeCheck className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                  <span className="text-xs font-medium text-green-600">Verified</span>
+            {/* Search Bar */}
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-3 flex flex-col sm:flex-row gap-3">
+              {/* Location */}
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 border border-gray-100 rounded-xl bg-gray-50 min-w-0">
+                <MapPin className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 font-medium">Location</p>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Enter location"
+                    className="w-full text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400"
+                    list="ghana-locations"
+                  />
+                  <datalist id="ghana-locations">
+                    {GHANA_LOCATIONS.map((l) => <option key={l} value={l} />)}
+                  </datalist>
                 </div>
-                <p className="font-semibold text-gray-900 text-sm truncate">{card.title}</p>
-                <p className="text-xs text-gray-500 truncate">{card.location}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="font-bold text-green-600 text-sm">{card.price}</span>
-                  <div className="flex items-center gap-0.5">
-                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    <span className="text-xs font-medium text-gray-600">{card.rating}</span>
+              </div>
+
+              {/* Property Type */}
+              <div className="flex items-center gap-2 px-3 py-2 border border-gray-100 rounded-xl bg-gray-50 min-w-[140px]">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 font-medium">Property Type</p>
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={propertyType}
+                      onChange={(e) => setPropertyType(e.target.value)}
+                      className="w-full text-sm text-gray-800 bg-transparent outline-none appearance-none"
+                    >
+                      {PROPERTY_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3 h-3 text-gray-400 flex-shrink-0" />
                   </div>
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60 text-xs">
-        <span>Scroll to explore</span>
-        <div className="w-5 h-8 rounded-full border border-white/30 flex items-start justify-center pt-1.5">
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="w-1 h-1.5 rounded-full bg-white/60"
-          />
+              {/* Price Range */}
+              <div className="flex items-center gap-2 px-3 py-2 border border-gray-100 rounded-xl bg-gray-50 min-w-[130px]">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 font-medium">Price Range</p>
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={priceRange}
+                      onChange={(e) => setPriceRange(e.target.value)}
+                      className="w-full text-sm text-gray-800 bg-transparent outline-none appearance-none"
+                    >
+                      <option value="any">Any Price</option>
+                      <option value="0-500">Below GHC 500</option>
+                      <option value="500-1500">GHC 500 – 1,500</option>
+                      <option value="1500-3000">GHC 1,500 – 3,000</option>
+                      <option value="3000+">GHC 3,000+</option>
+                    </select>
+                    <ChevronDown className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSearch}
+                className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm flex-shrink-0"
+              >
+                <Search className="w-4 h-4" />
+                Search
+              </button>
+            </div>
+
+            {/* Quick stats */}
+            <div className="flex items-center gap-6 mt-7 text-sm text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span><strong className="text-gray-900">5K+</strong> Properties Listed</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <span><strong className="text-gray-900">2K+</strong> Verified Landlords</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <span><strong className="text-gray-900">Free</strong> To Join</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — Property image collage */}
+          <div className="relative hidden lg:block">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[520px]">
+              <img
+                src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=80"
+                alt="Modern apartment"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            </div>
+
+            {/* Floating cards */}
+            {featuredBadge.map((b, i) => (
+              <div
+                key={b.label}
+                className={`absolute ${i === 0 ? "-left-10 top-16" : "-left-10 bottom-20"} bg-white rounded-2xl shadow-xl p-3 flex items-center gap-3 w-56 border border-gray-100`}
+              >
+                <img src={b.img} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                <div>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <BadgeCheck className="w-3 h-3 text-green-600" />
+                    <span className="text-xs text-green-600 font-medium">Verified</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{b.label}</p>
+                  <p className="text-sm font-bold text-green-600">{b.price}</p>
+                </div>
+              </div>
+            ))}
+
+            {/* Category chips */}
+            <div className="absolute -bottom-4 right-4 flex gap-2">
+              {["Apartment", "Self Contain", "Single Room"].map((cat) => (
+                <Link key={cat} href={`/properties?type=${cat.toLowerCase().replace(" ", "-")}`}>
+                  <span className="bg-white text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-full shadow-md border border-gray-100 hover:border-green-300 hover:text-green-700 transition-colors cursor-pointer">
+                    {cat}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
