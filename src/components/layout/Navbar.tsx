@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
@@ -43,9 +44,8 @@ export function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  // Mock auth state - in production use next-auth session
-  const isLoggedIn = false;
-  const user = null as null | { name: string; role: string; avatar?: string };
+  const { user, logout } = useAuth();
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -153,7 +153,7 @@ export function Navbar() {
                           <p className="text-xs text-gray-500 capitalize">{user.role}</p>
                         </div>
                         <Link
-                          href="/dashboard"
+                          href={`/dashboard/${user?.role}`}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           <LayoutDashboard className="w-4 h-4" /> Dashboard
@@ -171,7 +171,7 @@ export function Navbar() {
                           <User className="w-4 h-4" /> Profile
                         </Link>
                         <div className="border-t border-gray-100 mt-1 pt-1">
-                          <button className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 w-full">
+                          <button onClick={logout} className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 w-full">
                             <LogOut className="w-4 h-4" /> Sign Out
                           </button>
                         </div>

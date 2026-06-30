@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.42.1",
+    "jose": "^6.2.3",
     "lucide-react": "^1.22.0",
     "mongoose": "^9.7.3",
     "next": "16.2.9",
