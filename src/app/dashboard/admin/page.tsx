@@ -32,7 +32,7 @@ import { Property } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Overview", active: true },
+  { icon: LayoutDashboard, label: "Overview" },
   { icon: Building2, label: "Properties" },
   { icon: Users, label: "Users" },
   { icon: BadgeCheck, label: "Verifications" },
@@ -46,7 +46,7 @@ const stats = [
   { label: "Active Users", value: "23,541", change: "+312 today", icon: Users, color: "bg-green-100 text-green-600", trend: "up" },
   { label: "Pending Verifications", value: "37", change: "Needs review", icon: BadgeCheck, color: "bg-amber-100 text-amber-600", trend: "warn" },
   { label: "Reports", value: "8", change: "3 urgent", icon: AlertTriangle, color: "bg-red-100 text-red-600", trend: "warn" },
-  { label: "Monthly Revenue", value: "$48,200", change: "+18% vs last month", icon: DollarSign, color: "bg-emerald-100 text-emerald-600", trend: "up" },
+  { label: "Monthly Revenue", value: "GHC 48,200", change: "+18% vs last month", icon: DollarSign, color: "bg-emerald-100 text-emerald-600", trend: "up" },
   { label: "Avg Response Time", value: "2.4h", change: "-0.3h improved", icon: MessageSquare, color: "bg-purple-100 text-purple-600", trend: "up" },
 ];
 
@@ -57,10 +57,10 @@ const pendingVerifications = [
 ];
 
 const recentUsers = [
-  { id: "u1", name: "Emily Chen", email: "emily@example.com", role: "tenant", joined: "2h ago", status: "active", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80" },
-  { id: "u2", name: "Marcus Johnson", email: "marcus@example.com", role: "landlord", joined: "4h ago", status: "pending", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80" },
-  { id: "u3", name: "Priya Kumar", email: "priya@example.com", role: "tenant", joined: "6h ago", status: "active", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80" },
-  { id: "u4", name: "David Park", email: "david@example.com", role: "landlord", joined: "8h ago", status: "suspended", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80" },
+  { id: "u1", name: "Abena Owusu", email: "abena.owusu@example.com", role: "tenant", joined: "2h ago", status: "active", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80" },
+  { id: "u2", name: "Kwame Boateng", email: "kwame.boateng@example.com", role: "landlord", joined: "4h ago", status: "pending", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80" },
+  { id: "u3", name: "Akosua Mensah", email: "akosua.mensah@example.com", role: "tenant", joined: "6h ago", status: "active", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80" },
+  { id: "u4", name: "Yaw Darko", email: "yaw.darko@example.com", role: "landlord", joined: "8h ago", status: "suspended", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80" },
 ];
 
 const recentProperties = MOCK_PROPERTIES.slice(0, 4) as Property[];
@@ -70,6 +70,7 @@ export default function AdminDashboard() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"properties" | "users" | "verifications">("properties");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("Overview");
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 flex">
@@ -88,10 +89,11 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="flex-1 p-3 overflow-y-auto">
-          {navItems.map(({ icon: Icon, label, active }) => (
+          {navItems.map(({ icon: Icon, label }) => (
             <button
               key={label}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-1 ${active ? "bg-green-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
+              onClick={() => { setActiveNav(label); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-1 ${activeNav === label ? "bg-green-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
               {label}
@@ -139,7 +141,7 @@ export default function AdminDashboard() {
 
         <div className="p-4 sm:p-6 max-w-7xl mx-auto">
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{activeNav === "Overview" ? "Admin Dashboard" : activeNav}</h1>
             <p className="text-gray-500 text-sm">Platform overview and management</p>
           </div>
 
