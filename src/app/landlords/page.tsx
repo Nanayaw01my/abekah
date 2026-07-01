@@ -4,78 +4,12 @@ import { Button } from "@/components/ui/Button";
 import { StarRating } from "@/components/ui/StarRating";
 
 const landlords = [
-  {
-    id: "l1",
-    name: "Michael Johnson",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200",
-    properties: 8,
-    rating: 4.9,
-    reviews: 47,
-    bio: "Professional property manager with 10+ years of experience in luxury and mid-range rentals across NYC.",
-    specialties: ["Apartments", "Condos"],
-    location: "New York, NY",
-    phone: "+1 555-0101",
-  },
-  {
-    id: "l2",
-    name: "Sarah Williams",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
-    properties: 5,
-    rating: 4.7,
-    reviews: 32,
-    bio: "Independent landlord specializing in boutique studio and one-bedroom apartments in trendy neighborhoods.",
-    specialties: ["Studios", "Apartments"],
-    location: "Los Angeles, CA",
-    phone: "+1 555-0202",
-  },
-  {
-    id: "l3",
-    name: "David Chen",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-    properties: 12,
-    rating: 4.8,
-    reviews: 89,
-    bio: "Real estate investor with a large portfolio of family homes and townhouses in premium San Francisco neighborhoods.",
-    specialties: ["Houses", "Townhouses"],
-    location: "San Francisco, CA",
-    phone: "+1 555-0303",
-  },
-  {
-    id: "l4",
-    name: "Amanda Roberts",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
-    properties: 6,
-    rating: 5.0,
-    reviews: 24,
-    bio: "Luxury property specialist managing premium villas and high-end condos in Miami's most exclusive areas.",
-    specialties: ["Villas", "Luxury"],
-    location: "Miami, FL",
-    phone: "+1 555-0404",
-  },
-  {
-    id: "l5",
-    name: "Robert Kim",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200",
-    properties: 9,
-    rating: 4.6,
-    reviews: 51,
-    bio: "Urban development expert focused on tech-professional housing near major tech hubs in Seattle and Portland.",
-    specialties: ["Condos", "Apartments"],
-    location: "Seattle, WA",
-    phone: "+1 555-0505",
-  },
-  {
-    id: "l6",
-    name: "Jennifer Martinez",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200",
-    properties: 4,
-    rating: 4.4,
-    reviews: 18,
-    bio: "Family-oriented landlord with well-maintained properties in quiet Austin neighborhoods. Always responsive.",
-    specialties: ["Houses", "Townhouses"],
-    location: "Austin, TX",
-    phone: "+1 555-0606",
-  },
+  { id: "l1", name: "Kofi Mensah", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200", properties: 8, rating: 4.9, reviews: 47, bio: "Professional property manager with 10+ years of experience in residential rentals across Accra.", specialties: ["Apartments", "Self Contain"], location: "West Legon, Accra", phone: "+233 24 000 0001" },
+  { id: "l2", name: "Akosua Asante", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200", properties: 5, rating: 4.7, reviews: 32, bio: "Real estate investor with residential properties across Greater Accra. All units well maintained.", specialties: ["Apartments", "Chamber & Hall"], location: "East Legon, Accra", phone: "+233 24 000 0002" },
+  { id: "l3", name: "Yaw Darko", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200", properties: 12, rating: 4.2, reviews: 11, bio: "Landlord with affordable single room and self-contain units in Madina. Ideal for students.", specialties: ["Single Room", "Self Contain"], location: "Madina, Accra", phone: "+233 24 000 0003" },
+  { id: "l4", name: "Abena Osei", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200", properties: 6, rating: 4.9, reviews: 32, bio: "Executive property specialist in Airport Residential. All utilities included.", specialties: ["Executive Studios", "Apartments"], location: "Airport Residential, Accra", phone: "+233 24 000 0004" },
+  { id: "l5", name: "Kwame Boateng", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200", properties: 9, rating: 4.3, reviews: 8, bio: "Property developer with residential complexes in Tema. New builds with parking and security.", specialties: ["Apartments", "Self Contain"], location: "Tema Community 25", phone: "+233 24 000 0005" },
+  { id: "l6", name: "Ama Agyei", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200", properties: 4, rating: 4.1, reviews: 7, bio: "Friendly landlord with affordable chamber & hall and single rooms in Achimota.", specialties: ["Chamber & Hall", "Single Room"], location: "Achimota, Accra", phone: "+233 24 000 0006" },
 ];
 
 export default function LandlordsPage() {
@@ -164,8 +98,7 @@ export default function LandlordsPage() {
           <Building2 className="w-12 h-12 text-green-200 mx-auto mb-4" />
           <h2 className="text-3xl font-bold mb-3">Are you a landlord?</h2>
           <p className="text-green-100 max-w-lg mx-auto mb-6">
-            Join 15,000+ verified landlords who trust RentFinder to fill their properties with
-            quality tenants. List your first property for free.
+            Join 2,000+ verified landlords who trust Rental Property Finder to fill their properties with quality tenants. List your first property for free.
           </p>
           <Link href="/auth/register?role=landlord">
             <Button variant="secondary" size="xl" className="bg-white text-green-700 hover:bg-green-50 border-0">
