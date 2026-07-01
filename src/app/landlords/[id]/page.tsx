@@ -111,8 +111,9 @@ const reviews = [
   { name: "Kofi Boateng", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80", rating: 5, text: "Honest and fair. No hidden charges. Highly recommend.", date: "Oct 2024" },
 ];
 
-export default function LandlordProfilePage({ params }: { params: { id: string } }) {
-  const landlord = landlords.find((l) => l.id === params.id);
+export default async function LandlordProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const landlord = landlords.find((l) => l.id === id);
   if (!landlord) notFound();
 
   const landlordProperties = MOCK_PROPERTIES.filter((p) => p.landlord._id === landlord.id);
