@@ -21,8 +21,7 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const [savedCount, bookings, unreadConvos, recentBookings] = await Promise.all([
-      // @ts-expect-error favorites is ObjectId[]
-      Promise.resolve((user.favorites || []).length),
+      Promise.resolve(((user as { favorites?: unknown[] }).favorites || []).length),
       Booking.countDocuments({ tenant: userId }),
       Conversation.countDocuments({ participants: userId, unreadCount: { $gt: 0 } }),
       Booking.find({ tenant: userId })
@@ -33,8 +32,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     const savedProperties = await Property.find({
-      // @ts-expect-error favorites is ObjectId[]
-      _id: { $in: user.favorites || [] },
+      _id: { $in: (user as { favorites?: unknown[] }).favorites || [] },
     })
       .limit(3)
       .lean();
