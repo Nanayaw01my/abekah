@@ -65,7 +65,7 @@ export default function AdminDashboard() {
     if (!token) { setLoading(false); return; }
     fetch("/api/dashboard/admin", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); })
+      .then((d) => { if (!d.error) setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 

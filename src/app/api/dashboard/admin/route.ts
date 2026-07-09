@@ -43,6 +43,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("[GET /api/dashboard/admin]", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({
+      stats: { totalProperties: 0, totalUsers: 0, pendingVerifications: 0, totalBookings: 0 },
+      recentUsers: [],
+      recentProperties: [],
+    });
   }
 }

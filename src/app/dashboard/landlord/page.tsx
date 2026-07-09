@@ -85,7 +85,7 @@ export default function LandlordDashboardPage() {
     if (!token) { setLoading(false); return; }
     fetch("/api/dashboard/landlord", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); })
+      .then((d) => { if (!d.error) setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
