@@ -77,7 +77,11 @@ export default function LandlordDashboardPage() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<DashboardData>({
+    stats: { properties: 0, totalViews: 0, messages: 0, bookings: 0, avgRating: 0 },
+    myProperties: [],
+    recentBookings: [],
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,27 +89,30 @@ export default function LandlordDashboardPage() {
     if (!token) { setLoading(false); return; }
     fetch("/api/dashboard/landlord", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
-      .then((d) => { if (!d.error) setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((d) => { if (d && !d.error) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "L";
 
   const statCards = [
-    { label: "Properties", value: data?.stats.properties ?? 0, icon: Building2, color: "bg-blue-100 text-blue-600" },
-    { label: "Total Views", value: data?.stats.totalViews?.toLocaleString() ?? "0", icon: Eye, color: "bg-green-100 text-green-600" },
-    { label: "Messages", value: data?.stats.messages ?? 0, icon: MessageSquare, color: "bg-purple-100 text-purple-600" },
-    { label: "Bookings", value: data?.stats.bookings ?? 0, icon: Calendar, color: "bg-amber-100 text-amber-600" },
-    { label: "Avg. Rating", value: data?.stats.avgRating ?? "—", icon: Star, color: "bg-rose-100 text-rose-600" },
+    { label: "Properties", value: data.stats.properties, icon: Building2, color: "bg-blue-100 text-blue-600" },
+    { label: "Total Views", value: data.stats.totalViews.toLocaleString(), icon: Eye, color: "bg-green-100 text-green-600" },
+    { label: "Messages", value: data.stats.messages, icon: MessageSquare, color: "bg-purple-100 text-purple-600" },
+    { label: "Bookings", value: data.stats.bookings, icon: Calendar, color: "bg-amber-100 text-amber-600" },
+    { label: "Avg. Rating", value: data.stats.avgRating || "—", icon: Star, color: "bg-rose-100 text-rose-600" },
     { label: "Revenue", value: "—", icon: DollarSign, color: "bg-emerald-100 text-emerald-600" },
   ];
 
-  const SidebarContent = () => (
+  const sidebarInner = (
     <>
       <div className="p-5 border-b border-gray-100">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold overflow-hidden">
-            {user?.avatar ? <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" /> : initials}
+            {user?.avatar
+              ? <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+              : initials}
           </div>
           <div>
             <p className="font-semibold text-gray-900 text-sm">{user?.name || "Landlord"}</p>
@@ -127,16 +134,20 @@ export default function LandlordDashboardPage() {
           >
             <Icon className="w-4 h-4" />
             {label}
-            {label === "Messages" && (data?.stats.messages ?? 0) > 0 && (
-              <span className="ml-auto w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center">{data!.stats.messages}</span>
+            {label === "Messages" && data.stats.messages > 0 && (
+              <span className="ml-auto w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center">
+                {data.stats.messages}
+              </span>
             )}
           </button>
         ))}
       </nav>
       <div className="p-3 border-t border-gray-100">
-        <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors">
-          <LogOut className="w-4 h-4" />
-          Sign Out
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <LogOut className="w-4 h-4" /> Sign Out
         </button>
       </div>
     </>
@@ -144,6 +155,7 @@ export default function LandlordDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 lg:pt-20 flex">
+      {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
@@ -152,16 +164,18 @@ export default function LandlordDashboardPage() {
               <span className="font-bold text-gray-900">Menu</span>
               <button onClick={() => setSidebarOpen(false)}><X className="w-5 h-5 text-gray-500" /></button>
             </div>
-            <SidebarContent />
+            {sidebarInner}
           </aside>
         </div>
       )}
 
+      {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 fixed left-0 top-20 bottom-0 overflow-y-auto">
-        <SidebarContent />
+        {sidebarInner}
       </aside>
 
       <main className="flex-1 lg:ml-64 min-w-0">
+        {/* Mobile top bar */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
           <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
             <Menu className="w-5 h-5 text-gray-600" />
@@ -181,7 +195,7 @@ export default function LandlordDashboardPage() {
             <div className="flex items-center gap-3">
               <button className="relative p-2.5 bg-white rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
                 <Bell className="w-5 h-5 text-gray-600" />
-                {(data?.stats.messages ?? 0) > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full" />}
+                {data.stats.messages > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full" />}
               </button>
               <Link href="/dashboard/landlord/new-property">
                 <Button><Plus className="w-4 h-4" /> Add Property</Button>
@@ -196,11 +210,9 @@ export default function LandlordDashboardPage() {
                 <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mb-3`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                {loading ? (
-                  <div className="h-6 w-12 bg-gray-200 rounded animate-pulse mb-1" />
-                ) : (
-                  <p className="text-xl font-bold text-gray-900">{value}</p>
-                )}
+                {loading
+                  ? <div className="h-6 w-12 bg-gray-200 rounded animate-pulse mb-1" />
+                  : <p className="text-xl font-bold text-gray-900">{value}</p>}
                 <p className="text-xs text-gray-500 mt-0.5">{label}</p>
               </div>
             ))}
@@ -216,7 +228,7 @@ export default function LandlordDashboardPage() {
             </div>
             {loading ? (
               <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
-            ) : !data?.myProperties?.length ? (
+            ) : data.myProperties.length === 0 ? (
               <div className="p-8 text-center">
                 <Building2 className="w-10 h-10 text-gray-200 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">No properties listed yet</p>
@@ -278,12 +290,12 @@ export default function LandlordDashboardPage() {
 
           {/* Recent Bookings */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <div className="p-5 border-b border-gray-100">
               <h2 className="font-bold text-gray-900">Recent Booking Requests</h2>
             </div>
             {loading ? (
               <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
-            ) : !data?.recentBookings?.length ? (
+            ) : data.recentBookings.length === 0 ? (
               <div className="p-8 text-center">
                 <Calendar className="w-10 h-10 text-gray-200 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">No booking requests yet</p>
@@ -302,7 +314,10 @@ export default function LandlordDashboardPage() {
                         {new Date(b.date).toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })} at {b.time}
                       </p>
                     </div>
-                    <Badge variant={b.status === "confirmed" ? "success" : b.status === "cancelled" ? "danger" : "warning"} className="capitalize flex-shrink-0 text-xs">
+                    <Badge
+                      variant={b.status === "confirmed" ? "success" : b.status === "cancelled" ? "danger" : "warning"}
+                      className="capitalize flex-shrink-0 text-xs"
+                    >
                       {b.status}
                     </Badge>
                   </div>

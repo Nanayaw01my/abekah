@@ -15,7 +15,6 @@ import {
   MapPin,
   Bed,
   Bath,
-  Eye,
   Menu,
   X,
 } from "lucide-react";
@@ -61,7 +60,11 @@ export default function TenantDashboardPage() {
   const { user, logout } = useAuth();
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [data, setData] = useState<DashboardData>({
+    stats: { saved: 0, appointments: 0, messages: 0 },
+    recentBookings: [],
+    savedProperties: [],
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,18 +72,21 @@ export default function TenantDashboardPage() {
     if (!token) { setLoading(false); return; }
     fetch("/api/dashboard/tenant", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
-      .then((d) => { if (!d.error) setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((d) => { if (d && !d.error) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "T";
 
-  const SidebarContent = () => (
+  const sidebarInner = (
     <>
       <div className="p-5 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
-            {user?.avatar ? <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" /> : initials}
+          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold overflow-hidden">
+            {user?.avatar
+              ? <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+              : initials}
           </div>
           <div>
             <p className="font-semibold text-gray-900 text-sm">{user?.name || "Tenant"}</p>
@@ -99,31 +105,28 @@ export default function TenantDashboardPage() {
           >
             <Icon className="w-4 h-4" />
             {label}
-            {label === "Messages" && (data?.stats.messages ?? 0) > 0 && (
-              <span className="ml-auto w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center">{data!.stats.messages}</span>
+            {label === "Messages" && data.stats.messages > 0 && (
+              <span className="ml-auto w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center">
+                {data.stats.messages}
+              </span>
             )}
           </button>
         ))}
       </nav>
       <div className="p-3 border-t border-gray-100">
-        <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors">
-          <LogOut className="w-4 h-4" />
-          Sign Out
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <LogOut className="w-4 h-4" /> Sign Out
         </button>
       </div>
     </>
   );
 
-  const StatSkeleton = () => (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-center animate-pulse">
-      <div className="w-9 h-9 rounded-xl bg-gray-200 mx-auto mb-2" />
-      <div className="h-7 w-10 bg-gray-200 rounded mx-auto mb-1" />
-      <div className="h-3 w-14 bg-gray-100 rounded mx-auto" />
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 pt-16 lg:pt-20 flex">
+      {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
@@ -132,16 +135,18 @@ export default function TenantDashboardPage() {
               <span className="font-bold text-gray-900">Menu</span>
               <button onClick={() => setSidebarOpen(false)}><X className="w-5 h-5 text-gray-500" /></button>
             </div>
-            <SidebarContent />
+            {sidebarInner}
           </aside>
         </div>
       )}
 
+      {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 fixed left-0 top-20 bottom-0 overflow-y-auto">
-        <SidebarContent />
+        {sidebarInner}
       </aside>
 
       <main className="flex-1 lg:ml-64 min-w-0">
+        {/* Mobile top bar */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
           <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
             <Menu className="w-5 h-5 text-gray-600" />
@@ -164,34 +169,32 @@ export default function TenantDashboardPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            {loading ? (
-              [1, 2, 3].map((i) => <StatSkeleton key={i} />)
-            ) : (
-              [
-                { label: "Saved", value: data?.stats.saved ?? 0, icon: Heart, color: "bg-rose-100 text-rose-600" },
-                { label: "Appointments", value: data?.stats.appointments ?? 0, icon: Calendar, color: "bg-blue-100 text-blue-600" },
-                { label: "Messages", value: data?.stats.messages ?? 0, icon: MessageSquare, color: "bg-purple-100 text-purple-600" },
-              ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-center">
-                  <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mx-auto mb-2`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">{value}</p>
-                  <p className="text-xs text-gray-500">{label}</p>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            {[
+              { label: "Saved", value: data.stats.saved, icon: Heart, color: "bg-rose-100 text-rose-600" },
+              { label: "Appointments", value: data.stats.appointments, icon: Calendar, color: "bg-blue-100 text-blue-600" },
+              { label: "Messages", value: data.stats.messages, icon: MessageSquare, color: "bg-purple-100 text-purple-600" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm text-center">
+                <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mx-auto mb-2`}>
+                  <Icon className="w-4 h-4" />
                 </div>
-              ))
-            )}
+                {loading
+                  ? <div className="h-7 w-10 bg-gray-200 rounded animate-pulse mx-auto mb-1" />
+                  : <p className="text-2xl font-bold text-gray-900">{value}</p>}
+                <p className="text-xs text-gray-500">{label}</p>
+              </div>
+            ))}
           </div>
 
           {/* Upcoming Viewings */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <div className="p-5 border-b border-gray-100">
               <h2 className="font-bold text-gray-900">Upcoming Viewings</h2>
             </div>
             {loading ? (
               <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
-            ) : data?.recentBookings.length === 0 || !data?.recentBookings ? (
+            ) : data.recentBookings.length === 0 ? (
               <div className="p-8 text-center">
                 <Calendar className="w-10 h-10 text-gray-200 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">No upcoming viewings yet</p>
@@ -225,15 +228,15 @@ export default function TenantDashboardPage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="font-bold text-gray-900">Saved Properties</h2>
-              {(data?.stats.saved ?? 0) > 0 && (
+              {data.stats.saved > 0 && (
                 <Link href="/favorites">
-                  <Button variant="outline" size="sm">View All {data!.stats.saved}</Button>
+                  <Button variant="outline" size="sm">View All {data.stats.saved}</Button>
                 </Link>
               )}
             </div>
             {loading ? (
               <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
-            ) : !data?.savedProperties?.length ? (
+            ) : data.savedProperties.length === 0 ? (
               <div className="p-8 text-center">
                 <Heart className="w-10 h-10 text-gray-200 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">No saved properties yet</p>
