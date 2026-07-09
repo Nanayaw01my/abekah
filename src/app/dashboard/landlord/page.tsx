@@ -66,6 +66,7 @@ export default function LandlordDashboardPage() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [postSuccess, setPostSuccess] = useState(false);
+  const [postError, setPostError] = useState("");
   const [posting, setPosting] = useState(false);
 
   const [form, setForm] = useState({
@@ -111,6 +112,7 @@ export default function LandlordDashboardPage() {
       amenities: form.amenities,
       features: { furnished: form.furnished, parking: form.parking, security: form.security, water: form.water, electricity: form.electricity },
     };
+    setPostError("");
     try {
       const res = await fetch("/api/properties", {
         method: "POST",
@@ -120,9 +122,14 @@ export default function LandlordDashboardPage() {
       if (res.ok) {
         setPostSuccess(true);
         setForm({ title: "", type: "apartment", price: "", city: "Accra", state: "Greater Accra", address: "", neighborhood: "", bedrooms: "1", bathrooms: "1", area: "", description: "", amenities: [], imageUrls: "", furnished: false, parking: false, security: false, water: true, electricity: true });
-        setTimeout(() => setPostSuccess(false), 4000);
+        setTimeout(() => setPostSuccess(false), 5000);
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setPostError(d.error || "Failed to post property. Please try again.");
       }
-    } catch {}
+    } catch {
+      setPostError("Network error. Please check your connection.");
+    }
     setPosting(false);
   };
 
@@ -279,8 +286,13 @@ export default function LandlordDashboardPage() {
                   <CheckCircle className="w-5 h-5 flex-shrink-0" />
                   <div>
                     <p className="font-semibold">Property posted successfully!</p>
-                    <p className="text-sm text-green-600">It will be reviewed and listed shortly.</p>
+                    <p className="text-sm text-green-600">Your property is now live and visible to tenants.</p>
                   </div>
+                </div>
+              )}
+              {postError && (
+                <div className="mb-5 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl px-5 py-4">
+                  <span className="font-semibold text-sm">{postError}</span>
                 </div>
               )}
 

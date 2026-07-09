@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Property from "@/models/Property";
+import { verifyToken } from "@/lib/jwt";
 
 export async function GET(req: NextRequest) {
   try {
@@ -70,9 +71,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const payload = await verifyToken(token);
+    if (!payload?.sub) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     await connectDB();
     const body = await req.json();
-    const property = await Property.create(body);
+    const property = await Property.create({ ...body, landlord: payload.sub, status: "available" });
     return NextResponse.json(property, { status: 201 });
   } catch (error) {
     console.error("[POST /api/properties]", error);
