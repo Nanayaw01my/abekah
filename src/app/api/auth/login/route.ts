@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       avatar: user.avatar,
     };
 
-    const token = signToken(safeUser._id);
+    const token = await signToken(safeUser._id);
 
     return NextResponse.json({ user: safeUser, token });
   } catch (error) {
