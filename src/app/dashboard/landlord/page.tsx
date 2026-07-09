@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -23,15 +23,12 @@ import {
   Star,
   Menu,
   X,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { MOCK_PROPERTIES } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
-import { Property } from "@/types";
 import { useAuth } from "@/context/AuthContext";
-
-const mockLandlordProperties = MOCK_PROPERTIES.slice(0, 3) as Property[];
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard" },
@@ -43,21 +40,64 @@ const navItems = [
   { icon: Settings, label: "Settings" },
 ];
 
+interface Property {
+  _id: string;
+  title: string;
+  price: number;
+  status: string;
+  views: number;
+  images: string[];
+  location: { city: string; state: string };
+}
+
+interface Booking {
+  _id: string;
+  date: string;
+  time: string;
+  type: string;
+  status: string;
+  property: { title: string; location: { city: string } };
+  tenant: { name: string; email: string; avatar?: string };
+}
+
+interface DashboardData {
+  stats: {
+    properties: number;
+    totalViews: number;
+    messages: number;
+    bookings: number;
+    avgRating: number;
+  };
+  myProperties: Property[];
+  recentBookings: Booking[];
+}
+
 export default function LandlordDashboardPage() {
   const { user, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("rf_token");
+    if (!token) { setLoading(false); return; }
+    fetch("/api/dashboard/landlord", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
   const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "L";
 
-  const stats = [
-    { label: "Properties", value: "3", icon: Building2, change: "+1", color: "bg-blue-100 text-blue-600" },
-    { label: "Total Views", value: "1,247", icon: Eye, change: "+23%", color: "bg-green-100 text-green-600" },
-    { label: "Messages", value: "18", icon: MessageSquare, change: "+5", color: "bg-purple-100 text-purple-600" },
-    { label: "Bookings", value: "7", icon: Calendar, change: "+2", color: "bg-amber-100 text-amber-600" },
-    { label: "Revenue", value: "$9,700", icon: DollarSign, change: "+12%", color: "bg-emerald-100 text-emerald-600" },
-    { label: "Avg. Rating", value: "4.7", icon: Star, change: "+0.2", color: "bg-rose-100 text-rose-600" },
+  const statCards = [
+    { label: "Properties", value: data?.stats.properties ?? 0, icon: Building2, color: "bg-blue-100 text-blue-600" },
+    { label: "Total Views", value: data?.stats.totalViews?.toLocaleString() ?? "0", icon: Eye, color: "bg-green-100 text-green-600" },
+    { label: "Messages", value: data?.stats.messages ?? 0, icon: MessageSquare, color: "bg-purple-100 text-purple-600" },
+    { label: "Bookings", value: data?.stats.bookings ?? 0, icon: Calendar, color: "bg-amber-100 text-amber-600" },
+    { label: "Avg. Rating", value: data?.stats.avgRating ?? "—", icon: Star, color: "bg-rose-100 text-rose-600" },
+    { label: "Revenue", value: "—", icon: DollarSign, color: "bg-emerald-100 text-emerald-600" },
   ];
 
   const SidebarContent = () => (
@@ -87,8 +127,8 @@ export default function LandlordDashboardPage() {
           >
             <Icon className="w-4 h-4" />
             {label}
-            {label === "Messages" && (
-              <span className="ml-auto w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center">3</span>
+            {label === "Messages" && (data?.stats.messages ?? 0) > 0 && (
+              <span className="ml-auto w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center">{data!.stats.messages}</span>
             )}
           </button>
         ))}
@@ -104,7 +144,6 @@ export default function LandlordDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 lg:pt-20 flex">
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
@@ -118,13 +157,11 @@ export default function LandlordDashboardPage() {
         </div>
       )}
 
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 fixed left-0 top-20 bottom-0 overflow-y-auto">
         <SidebarContent />
       </aside>
 
       <main className="flex-1 lg:ml-64 min-w-0">
-        {/* Mobile top bar */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
           <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
             <Menu className="w-5 h-5 text-gray-600" />
@@ -136,7 +173,6 @@ export default function LandlordDashboardPage() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          {/* Desktop Header */}
           <div className="hidden lg:flex items-center justify-between mb-8">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -145,7 +181,7 @@ export default function LandlordDashboardPage() {
             <div className="flex items-center gap-3">
               <button className="relative p-2.5 bg-white rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
                 <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full" />
+                {(data?.stats.messages ?? 0) > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-green-500 rounded-full" />}
               </button>
               <Link href="/dashboard/landlord/new-property">
                 <Button><Plus className="w-4 h-4" /> Add Property</Button>
@@ -155,98 +191,124 @@ export default function LandlordDashboardPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            {stats.map(({ label, value, icon: Icon, change, color }) => (
+            {statCards.map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                 <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mb-3`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <p className="text-xl font-bold text-gray-900">{value}</p>
+                {loading ? (
+                  <div className="h-6 w-12 bg-gray-200 rounded animate-pulse mb-1" />
+                ) : (
+                  <p className="text-xl font-bold text-gray-900">{value}</p>
+                )}
                 <p className="text-xs text-gray-500 mt-0.5">{label}</p>
-                <p className="text-xs text-green-600 font-medium mt-1">{change}</p>
               </div>
             ))}
           </div>
 
-          {/* Properties */}
+          {/* My Properties */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="font-bold text-gray-900">My Properties</h2>
-              <Button variant="outline" size="sm">View All</Button>
+              <Link href="/dashboard/landlord/new-property">
+                <Button size="sm"><Plus className="w-3.5 h-3.5" /> Add New</Button>
+              </Link>
             </div>
-            <div className="divide-y divide-gray-100">
-              {mockLandlordProperties.map((property) => (
-                <div key={property._id} className="p-4 flex items-center gap-3 sm:gap-4">
-                  <img
-                    src={property.images[0]}
-                    alt={property.title}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 text-sm truncate">{property.title}</h3>
-                    <p className="text-xs text-gray-500 truncate">{property.location.city}, {property.location.state}</p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant={property.status === "available" ? "success" : "warning"} className="text-xs capitalize">
-                        {property.status}
-                      </Badge>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <Eye className="w-3 h-3" /> {property.views}
-                      </span>
+            {loading ? (
+              <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
+            ) : !data?.myProperties?.length ? (
+              <div className="p-8 text-center">
+                <Building2 className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No properties listed yet</p>
+                <Link href="/dashboard/landlord/new-property" className="mt-3 inline-block">
+                  <Button size="sm">List Your First Property</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {data.myProperties.map((property) => (
+                  <div key={property._id} className="p-4 flex items-center gap-3 sm:gap-4">
+                    <img src={property.images[0]} alt={property.title} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-sm truncate">{property.title}</h3>
+                      <p className="text-xs text-gray-500 flex items-center gap-1 truncate">
+                        <MapPin className="w-3 h-3 text-green-500 flex-shrink-0" />{property.location.city}, {property.location.state}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge variant={property.status === "available" ? "success" : "warning"} className="text-xs capitalize">
+                          {property.status}
+                        </Badge>
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Eye className="w-3 h-3" /> {property.views ?? 0}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right hidden sm:block flex-shrink-0">
+                      <p className="font-bold text-gray-900">{formatPrice(property.price)}</p>
+                      <p className="text-xs text-gray-500">/month</p>
+                    </div>
+                    <div className="relative flex-shrink-0">
+                      <button
+                        onClick={() => setActiveMenu(activeMenu === property._id ? null : property._id)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <MoreVertical className="w-4 h-4 text-gray-500" />
+                      </button>
+                      {activeMenu === property._id && (
+                        <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-10 py-1">
+                          <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                            <Edit2 className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <Link href={`/properties/${property._id}`}>
+                            <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                              <Eye className="w-3.5 h-3.5" /> View Listing
+                            </button>
+                          </Link>
+                          <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50">
+                            <Trash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right hidden sm:block flex-shrink-0">
-                    <p className="font-bold text-gray-900">{formatPrice(property.price)}</p>
-                    <p className="text-xs text-gray-500">/month</p>
-                  </div>
-                  <div className="relative flex-shrink-0">
-                    <button
-                      onClick={() => setActiveMenu(activeMenu === property._id ? null : property._id)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <MoreVertical className="w-4 h-4 text-gray-500" />
-                    </button>
-                    {activeMenu === property._id && (
-                      <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-10 py-1">
-                        <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                          <Edit2 className="w-3.5 h-3.5" /> Edit
-                        </button>
-                        <Link href={`/properties/${property._id}`}>
-                          <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                            <Eye className="w-3.5 h-3.5" /> View Listing
-                          </button>
-                        </Link>
-                        <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50">
-                          <Trash2 className="w-3.5 h-3.5" /> Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Recent Messages */}
+          {/* Recent Bookings */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900">Recent Inquiries</h2>
-              <Button variant="outline" size="sm">View All</Button>
+              <h2 className="font-bold text-gray-900">Recent Booking Requests</h2>
             </div>
-            <div className="divide-y divide-gray-100">
-              {[
-                { name: "Alex Johnson", message: "Hi, I'm interested in the downtown apartment. Is it still available?", time: "2 min ago", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80" },
-                { name: "Maria Santos", message: "Could I schedule a viewing for this Saturday?", time: "1 hour ago", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80" },
-                { name: "David Kim", message: "Are pets allowed in the property?", time: "3 hours ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80" },
-              ].map(({ name, message, time, avatar }) => (
-                <div key={name} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
-                  <img src={avatar} alt={name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">{name}</p>
-                    <p className="text-xs text-gray-500 truncate">{message}</p>
+            {loading ? (
+              <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
+            ) : !data?.recentBookings?.length ? (
+              <div className="p-8 text-center">
+                <Calendar className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No booking requests yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {data.recentBookings.map((b) => (
+                  <div key={b._id} className="flex items-center gap-3 p-4">
+                    <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 text-sm flex-shrink-0">
+                      {b.tenant?.name?.[0] ?? "?"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm">{b.tenant?.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{b.property?.title} · {b.type}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(b.date).toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })} at {b.time}
+                      </p>
+                    </div>
+                    <Badge variant={b.status === "confirmed" ? "success" : b.status === "cancelled" ? "danger" : "warning"} className="capitalize flex-shrink-0 text-xs">
+                      {b.status}
+                    </Badge>
                   </div>
-                  <span className="text-xs text-gray-400 flex-shrink-0">{time}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -26,10 +26,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { MOCK_PROPERTIES } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
-import { Property } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+
+interface AdminData {
+  stats: { totalProperties: number; totalUsers: number; pendingVerifications: number; totalBookings: number };
+  recentUsers: Array<{ _id: string; name: string; email: string; role: string; verified: boolean; createdAt: string; avatar?: string }>;
+  recentProperties: Array<{ _id: string; title: string; price: number; status: string; verified: boolean; images: string[]; location: { city: string; state: string } }>;
+}
 
 const navItems = [
   { icon: LayoutDashboard, label: "Overview" },
@@ -41,29 +45,11 @@ const navItems = [
   { icon: Settings, label: "Settings" },
 ];
 
-const stats = [
-  { label: "Total Properties", value: "1,284", change: "+48 this week", icon: Building2, color: "bg-blue-100 text-blue-600", trend: "up" },
-  { label: "Active Users", value: "23,541", change: "+312 today", icon: Users, color: "bg-green-100 text-green-600", trend: "up" },
-  { label: "Pending Verifications", value: "37", change: "Needs review", icon: BadgeCheck, color: "bg-amber-100 text-amber-600", trend: "warn" },
-  { label: "Reports", value: "8", change: "3 urgent", icon: AlertTriangle, color: "bg-red-100 text-red-600", trend: "warn" },
-  { label: "Monthly Revenue", value: "GHC 48,200", change: "+18% vs last month", icon: DollarSign, color: "bg-emerald-100 text-emerald-600", trend: "up" },
-  { label: "Avg Response Time", value: "2.4h", change: "-0.3h improved", icon: MessageSquare, color: "bg-purple-100 text-purple-600", trend: "up" },
-];
-
 const pendingVerifications = [
-  { id: "v1", name: "James Osei", type: "Landlord", email: "james@example.com", submitted: "2h ago", properties: 3 },
-  { id: "v2", name: "Akosua Mensah", type: "Landlord", email: "akosua@example.com", submitted: "5h ago", properties: 1 },
-  { id: "v3", name: "Kofi Atta", type: "Property", email: "kofi@example.com", submitted: "1d ago", properties: 2 },
+  { id: "v1", name: "James Osei", type: "Landlord", email: "james@example.com", submitted: "2h ago" },
+  { id: "v2", name: "Akosua Mensah", type: "Landlord", email: "akosua@example.com", submitted: "5h ago" },
+  { id: "v3", name: "Kofi Atta", type: "Property", email: "kofi@example.com", submitted: "1d ago" },
 ];
-
-const recentUsers = [
-  { id: "u1", name: "Abena Owusu", email: "abena.owusu@example.com", role: "tenant", joined: "2h ago", status: "active", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80" },
-  { id: "u2", name: "Kwame Boateng", email: "kwame.boateng@example.com", role: "landlord", joined: "4h ago", status: "pending", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80" },
-  { id: "u3", name: "Akosua Mensah", email: "akosua.mensah@example.com", role: "tenant", joined: "6h ago", status: "active", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80" },
-  { id: "u4", name: "Yaw Darko", email: "yaw.darko@example.com", role: "landlord", joined: "8h ago", status: "suspended", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80" },
-];
-
-const recentProperties = MOCK_PROPERTIES.slice(0, 4) as Property[];
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -71,6 +57,17 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"properties" | "users" | "verifications">("properties");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("Overview");
+  const [data, setData] = useState<AdminData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("rf_token");
+    if (!token) { setLoading(false); return; }
+    fetch("/api/dashboard/admin", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16 flex">
@@ -146,17 +143,23 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            {stats.map(({ label, value, change, icon: Icon, color, trend }) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            {[
+              { label: "Total Properties", value: data?.stats.totalProperties, icon: Building2, color: "bg-blue-100 text-blue-600" },
+              { label: "Total Users", value: data?.stats.totalUsers, icon: Users, color: "bg-green-100 text-green-600" },
+              { label: "Pending Verifications", value: data?.stats.pendingVerifications, icon: BadgeCheck, color: "bg-amber-100 text-amber-600" },
+              { label: "Total Bookings", value: data?.stats.totalBookings, icon: AlertTriangle, color: "bg-purple-100 text-purple-600" },
+            ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                 <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center mb-3`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <p className="text-lg sm:text-xl font-bold text-gray-900">{value}</p>
+                {loading ? (
+                  <div className="h-7 w-14 bg-gray-200 rounded animate-pulse mb-1" />
+                ) : (
+                  <p className="text-lg sm:text-xl font-bold text-gray-900">{value?.toLocaleString() ?? "0"}</p>
+                )}
                 <p className="text-xs text-gray-500 leading-tight">{label}</p>
-                <p className={`text-xs font-medium mt-1 ${trend === "up" ? "text-green-600" : "text-amber-600"}`}>
-                  {change}
-                </p>
               </div>
             ))}
           </div>
@@ -182,9 +185,13 @@ export default function AdminDashboard() {
               {/* Properties Tab */}
               {activeTab === "properties" && (
                 <div className="divide-y divide-gray-100">
-                  {recentProperties.map((p) => (
+                  {loading ? (
+                    <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
+                  ) : !data?.recentProperties?.length ? (
+                    <div className="p-8 text-center text-sm text-gray-400">No properties yet</div>
+                  ) : data.recentProperties.map((p) => (
                     <div key={p._id} className="flex items-center gap-3 p-3 sm:p-4">
-                      <img src={p.images[0]} alt={p.title} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                      <img src={p.images?.[0]} alt={p.title} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 text-sm truncate">{p.title}</p>
                         <p className="text-xs text-gray-500 flex items-center gap-1">
@@ -218,43 +225,41 @@ export default function AdminDashboard() {
               {/* Users Tab */}
               {activeTab === "users" && (
                 <div className="divide-y divide-gray-100">
-                  {recentUsers.map((u) => (
-                    <div key={u.id} className="flex items-center gap-3 p-3 sm:p-4">
-                      <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  {loading ? (
+                    <div className="p-6 text-center text-sm text-gray-400 animate-pulse">Loading...</div>
+                  ) : !data?.recentUsers?.length ? (
+                    <div className="p-8 text-center text-sm text-gray-400">No users yet</div>
+                  ) : data.recentUsers.map((u) => (
+                    <div key={u._id} className="flex items-center gap-3 p-3 sm:p-4">
+                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 text-sm flex-shrink-0">
+                        {u.name?.[0] ?? "?"}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 text-sm">{u.name}</p>
                         <p className="text-xs text-gray-500 truncate">{u.email}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge
-                            variant={u.role === "landlord" ? "info" : "default"}
-                            className="text-xs capitalize"
-                          >
-                            {u.role}
-                          </Badge>
-                          <Badge
-                            variant={u.status === "active" ? "success" : u.status === "pending" ? "warning" : "danger"}
-                            className="text-xs capitalize"
-                          >
-                            {u.status}
-                          </Badge>
+                          <Badge variant={u.role === "landlord" ? "info" : "default"} className="text-xs capitalize">{u.role}</Badge>
+                          <Badge variant={u.verified ? "success" : "warning"} className="text-xs">{u.verified ? "Verified" : "Unverified"}</Badge>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className="text-xs text-gray-400 hidden sm:block">{u.joined}</span>
+                        <span className="text-xs text-gray-400 hidden sm:block">
+                          {new Date(u.createdAt).toLocaleDateString("en-GH", { month: "short", day: "numeric" })}
+                        </span>
                         <div className="relative">
                           <button
-                            onClick={() => setActiveMenu(activeMenu === u.id ? null : u.id)}
+                            onClick={() => setActiveMenu(activeMenu === u._id ? null : u._id)}
                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             <MoreVertical className="w-4 h-4 text-gray-400" />
                           </button>
-                          {activeMenu === u.id && (
+                          {activeMenu === u._id && (
                             <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-10 py-1">
                               <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                 <Eye className="w-3.5 h-3.5" /> View Profile
                               </button>
                               <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-600 hover:bg-green-50">
-                                <CheckCircle className="w-3.5 h-3.5" /> Activate
+                                <CheckCircle className="w-3.5 h-3.5" /> Verify
                               </button>
                               <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-amber-600 hover:bg-amber-50">
                                 <XCircle className="w-3.5 h-3.5" /> Suspend

@@ -9,7 +9,6 @@ const testimonials = [
   {
     name: "Abena Owusu",
     role: "University Student",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
     rating: 5,
     text: "This platform helped me find a great apartment in just 2 days. No agent stress, no scams!",
     location: "East Legon, Accra",
@@ -17,7 +16,6 @@ const testimonials = [
   {
     name: "Kwame Asante",
     role: "Software Engineer",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
     rating: 5,
     text: "I found a verified 2-bedroom in Madina within days. Direct contact with the landlord made everything smooth.",
     location: "Madina, Accra",
@@ -25,7 +23,6 @@ const testimonials = [
   {
     name: "Akosua Mensah",
     role: "Nurse",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
     rating: 4,
     text: "No hidden fees, no agent commission. I paid exactly what I saw on the listing. Highly recommend!",
     location: "West Legon, Accra",
@@ -46,7 +43,7 @@ export function Testimonials() {
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Real stories from real tenants</h2>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
-              {testimonials.slice(0, 2).map(({ name, role, avatar, rating, text, location }, i) => (
+              {testimonials.slice(0, 2).map(({ name, role, rating, text, location }, i) => (
                 <motion.div
                   key={name}
                   initial={{ opacity: 0, y: 20 }}
@@ -57,7 +54,9 @@ export function Testimonials() {
                 >
                   <Quote className="absolute top-4 right-4 w-6 h-6 text-green-100" />
                   <div className="flex items-center gap-3 mb-3">
-                    <img src={avatar} alt={name} className="w-10 h-10 rounded-full object-cover" />
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm flex-shrink-0">
+                      {name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                    </div>
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">{name}</p>
                       <p className="text-xs text-gray-500">{role} · {location}</p>
@@ -80,7 +79,9 @@ export function Testimonials() {
             >
               <Quote className="absolute top-4 right-4 w-6 h-6 text-green-100" />
               <div className="flex items-center gap-3 mb-3">
-                <img src={testimonials[2].avatar} alt={testimonials[2].name} className="w-10 h-10 rounded-full object-cover" />
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm flex-shrink-0">
+                  {testimonials[2].name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{testimonials[2].name}</p>
                   <p className="text-xs text-gray-500">{testimonials[2].role} · {testimonials[2].location}</p>
