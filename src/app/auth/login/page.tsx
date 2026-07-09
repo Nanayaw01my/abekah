@@ -60,22 +60,6 @@ export default function LoginPage() {
           </Link>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-            {/* Tabs */}
-            <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
-              <button
-                onClick={() => { setTab("login"); setError(""); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === "login" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}
-              >
-                Login
-              </button>
-              <button
-                onClick={() => { setTab("register"); setError(""); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === "register" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}
-              >
-                Create Account
-              </button>
-            </div>
-
             {error && (
               <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
