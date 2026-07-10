@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { AuthProvider } from "@/context/AuthContext";
 import { SplashWrapper } from "@/components/SplashWrapper";
+import { ServerWakeUp } from "@/components/ServerWakeUp";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,11 +36,13 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)] bg-white text-gray-900">
         <AuthProvider>
+          <ServerWakeUp>
           <SplashWrapper>
             <Navbar />
             <div className="flex-1">{children}</div>
             <ConditionalFooter />
           </SplashWrapper>
+          </ServerWakeUp>
         </AuthProvider>
       </body>
     </html>
