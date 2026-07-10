@@ -7,14 +7,14 @@ export function SplashWrapper({ children }: { children: React.ReactNode }) {
   const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
-    // Only show once per browser session
-    if (!sessionStorage.getItem("splash_shown")) {
+    // Only show once ever (localStorage persists across sessions)
+    if (!localStorage.getItem("rf_splash_shown")) {
       setShowSplash(true);
     }
   }, []);
 
   function handleDone() {
-    sessionStorage.setItem("splash_shown", "1");
+    localStorage.setItem("rf_splash_shown", "1");
     setShowSplash(false);
   }
 

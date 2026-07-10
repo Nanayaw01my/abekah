@@ -515,7 +515,7 @@ export default function LandlordDashboardPage() {
                   <div className="divide-y divide-gray-100">
                     {myProperties.map((p) => (
                       <div key={p._id} className="p-4 flex items-center gap-3 sm:gap-4">
-                        <img src={p.images[0]} alt={p.title} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover flex-shrink-0" />
+                        <img src={p.images?.[0] || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=200"} alt={p.title} className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-gray-900 text-sm truncate">{p.title}</h3>
                           <p className="text-xs text-gray-500 flex items-center gap-1">

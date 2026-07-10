@@ -7,21 +7,26 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
   const [phase, setPhase] = useState<"in" | "hold" | "out">("in");
 
   useEffect(() => {
-    // progress bar over 9s, then fade out at 9.2s, call onDone at 10s
     const start = Date.now();
     const duration = 9000;
-    const raf = requestAnimationFrame(function tick() {
+    let rafId: number;
+    let active = true;
+
+    function tick() {
+      if (!active) return;
       const elapsed = Date.now() - start;
       setProgress(Math.min(elapsed / duration, 1));
-      if (elapsed < duration) requestAnimationFrame(tick);
+      if (elapsed < duration) rafId = requestAnimationFrame(tick);
       else setProgress(1);
-    });
+    }
+    rafId = requestAnimationFrame(tick);
 
-    const outTimer = setTimeout(() => setPhase("out"), 9200);
+    const outTimer = setTimeout(() => { if (active) setPhase("out"); }, 9200);
     const doneTimer = setTimeout(onDone, 10000);
 
     return () => {
-      cancelAnimationFrame(raf);
+      active = false;
+      cancelAnimationFrame(rafId);
       clearTimeout(outTimer);
       clearTimeout(doneTimer);
     };
