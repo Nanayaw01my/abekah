@@ -238,9 +238,9 @@ export default function TenantDashboardPage() {
           {/* Browse more */}
           {!loading && filtered.length > 0 && (
             <div className="text-center mt-8">
-              <Link href="/properties">
-                <Button variant="outline" size="lg">View All Properties</Button>
-              </Link>
+              <Button variant="outline" size="lg" onClick={() =>
+                fetch("/api/properties?limit=50&sortBy=newest").then(r => r.json()).then(d => setProperties(d.data || []))
+              }>Load More Properties</Button>
             </div>
           )}
         </div>

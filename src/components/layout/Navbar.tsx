@@ -113,27 +113,6 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               {isLoggedIn && user ? (
                 <>
-                  <button
-                    className={cn(
-                      "relative p-2 rounded-lg transition-colors",
-                      scrolled || !isHome
-                        ? "text-gray-600 hover:bg-gray-100"
-                        : "text-white hover:bg-white/10"
-                    )}
-                  >
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full" />
-                  </button>
-                  <button
-                    className={cn(
-                      "relative p-2 rounded-lg transition-colors",
-                      scrolled || !isHome
-                        ? "text-gray-600 hover:bg-gray-100"
-                        : "text-white hover:bg-white/10"
-                    )}
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                  </button>
                   <div className="relative">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
