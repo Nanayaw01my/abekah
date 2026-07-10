@@ -74,6 +74,8 @@ export default function LandlordDashboardPage() {
   const [postSuccess, setPostSuccess] = useState(false);
   const [postError, setPostError] = useState("");
   const [posting, setPosting] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const token = typeof window !== "undefined" ? localStorage.getItem("rf_token") : null;
   const authHeader = { Authorization: `Bearer ${token}` };
@@ -121,11 +123,34 @@ export default function LandlordDashboardPage() {
     }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !token) return;
+    setUploading(true);
+    const urls: string[] = [];
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      }).catch(() => null);
+      if (res?.ok) {
+        const data = await res.json();
+        if (data.url) urls.push(data.url);
+      }
+    }
+    setUploadedImages(prev => [...prev, ...urls]);
+    setUploading(false);
+    e.target.value = "";
+  };
+
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     setPosting(true);
     const token = localStorage.getItem("rf_token");
-    const images = form.imageUrls.split("\n").map((u) => u.trim()).filter(Boolean);
+    const images = uploadedImages;
     const body = {
       title: form.title,
       type: form.type,
@@ -149,6 +174,7 @@ export default function LandlordDashboardPage() {
       });
       if (res.ok) {
         setPostSuccess(true);
+        setUploadedImages([]);
         setForm({ title: "", type: "apartment", price: "", city: "Accra", state: "Greater Accra", address: "", neighborhood: "", bedrooms: "1", bathrooms: "1", area: "", description: "", amenities: [], imageUrls: "", furnished: false, parking: false, security: false, water: true, electricity: true });
         setTimeout(() => setPostSuccess(false), 5000);
       } else {
@@ -476,14 +502,38 @@ export default function LandlordDashboardPage() {
                 {/* Images */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
                   <h2 className="font-bold text-gray-900 mb-1">Property Images</h2>
-                  <p className="text-xs text-gray-400 mb-3">Paste image URLs, one per line (e.g. from Unsplash or your image host)</p>
-                  <textarea
-                    value={form.imageUrls}
-                    onChange={(e) => setForm({ ...form, imageUrls: e.target.value })}
-                    placeholder={"https://images.unsplash.com/photo-xxx\nhttps://..."}
-                    rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none font-mono text-xs"
-                  />
+                  <p className="text-xs text-gray-400 mb-3">Upload photos of your property (JPG, PNG, WebP — up to 5 at once)</p>
+
+                  {/* Uploaded previews */}
+                  {uploadedImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {uploadedImages.map((url, i) => (
+                        <div key={i} className="relative group">
+                          <img src={url} alt="" className="w-20 h-20 object-cover rounded-xl border border-gray-200" />
+                          <button type="button" onClick={() => setUploadedImages(prev => prev.filter((_, idx) => idx !== i))}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upload button */}
+                  <label className={`flex items-center justify-center gap-2 w-full py-8 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${uploading ? "border-green-300 bg-green-50" : "border-gray-200 hover:border-green-400 hover:bg-green-50"}`}>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploading} />
+                    {uploading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm text-green-600 font-medium">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-gray-400" />
+                        <span className="text-sm text-gray-500">Click to upload images</span>
+                      </>
+                    )}
+                  </label>
                 </div>
 
                 <Button type="submit" size="lg" className="w-full" loading={posting}>
