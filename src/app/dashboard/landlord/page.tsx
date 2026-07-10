@@ -38,22 +38,24 @@ interface Property {
   location: { city: string; state: string };
 }
 
-interface Message {
-  id: string;
-  tenant: string;
-  property: string;
-  message: string;
-  time: string;
-  read: boolean;
-  reply?: string;
+interface Convo {
+  _id: string;
+  property: { _id: string; title: string; location: { city: string } };
+  participants: { _id: string; name: string; role: string }[];
+  lastMessage?: string;
+  unreadCount: number;
+  messages: { _id: string; sender: string; content: string; createdAt: string }[];
 }
 
-// Sample messages — in production these come from the database
-const SAMPLE_MESSAGES: Message[] = [
-  { id: "m1", tenant: "Abena Owusu", property: "2-Bedroom Apartment, East Legon", message: "Hello, is this property still available? I would like to schedule a viewing.", time: "2 min ago", read: false },
-  { id: "m2", tenant: "Kwame Asante", property: "Self Contain, Madina", message: "What is the nearest transport stop to the property?", time: "1 hour ago", read: false },
-  { id: "m3", tenant: "Akosua Mensah", property: "2-Bedroom Apartment, East Legon", message: "Are pets allowed? I have a small dog.", time: "3 hours ago", read: true },
-];
+interface Booking {
+  _id: string;
+  property: { _id: string; title: string; location: { city: string }; images: string[] };
+  tenant: { _id: string; name: string; phone?: string; email?: string };
+  date: string;
+  time: string;
+  status: string;
+  type: string;
+}
 
 export default function LandlordDashboardPage() {
   const { user, logout } = useAuth();
@@ -62,12 +64,19 @@ export default function LandlordDashboardPage() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [myProperties, setMyProperties] = useState<Property[]>([]);
   const [loadingProps, setLoadingProps] = useState(true);
-  const [messages, setMessages] = useState<Message[]>(SAMPLE_MESSAGES);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [convos, setConvos] = useState<Convo[]>([]);
+  const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [activeConvo, setActiveConvo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [sendingMsg, setSendingMsg] = useState(false);
   const [postSuccess, setPostSuccess] = useState(false);
   const [postError, setPostError] = useState("");
   const [posting, setPosting] = useState(false);
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("rf_token") : null;
+  const authHeader = { Authorization: `Bearer ${token}` };
 
   const [form, setForm] = useState({
     title: "", type: "apartment", price: "", city: "Accra", state: "Greater Accra",
@@ -77,14 +86,33 @@ export default function LandlordDashboardPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("rf_token");
     if (!token) { setLoadingProps(false); return; }
-    fetch("/api/dashboard/landlord", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => { if (d && !d.error) setMyProperties(d.myProperties || []); })
+    fetch("/api/dashboard/landlord", { headers: authHeader })
+      .then(r => r.json())
+      .then(d => { if (d && !d.error) setMyProperties(d.myProperties || []); })
       .catch(() => {})
       .finally(() => setLoadingProps(false));
   }, []);
+
+  useEffect(() => {
+    if (activeNav !== "Messages" || !token) return;
+    setLoadingMsgs(true);
+    fetch("/api/landlord/messages", { headers: authHeader })
+      .then(r => r.json())
+      .then(d => setConvos(d.data || []))
+      .catch(() => {})
+      .finally(() => setLoadingMsgs(false));
+  }, [activeNav]);
+
+  useEffect(() => {
+    if (activeNav !== "Bookings" || !token) return;
+    setLoadingBookings(true);
+    fetch("/api/landlord/bookings", { headers: authHeader })
+      .then(r => r.json())
+      .then(d => setBookings(d.data || []))
+      .catch(() => {})
+      .finally(() => setLoadingBookings(false));
+  }, [activeNav]);
 
   const toggleAmenity = (a: string) => {
     setForm((f) => ({
@@ -133,15 +161,38 @@ export default function LandlordDashboardPage() {
     setPosting(false);
   };
 
-  const sendReply = (id: string) => {
-    if (!replyText.trim()) return;
-    setMessages((msgs) => msgs.map((m) => m.id === id ? { ...m, reply: replyText, read: true } : m));
-    setReplyText("");
-    setReplyingTo(null);
+  const sendReply = async (convoId: string) => {
+    if (!replyText.trim() || !token) return;
+    setSendingMsg(true);
+    const res = await fetch("/api/landlord/messages", {
+      method: "POST",
+      headers: { ...authHeader, "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId: convoId, content: replyText }),
+    }).catch(() => null);
+    if (res?.ok) {
+      const data = await res.json();
+      setConvos(prev => prev.map(c => c._id === convoId
+        ? { ...c, messages: [...c.messages, data.data], lastMessage: replyText }
+        : c));
+      setReplyText("");
+    }
+    setSendingMsg(false);
+  };
+
+  const updateBookingStatus = async (bookingId: string, status: string) => {
+    if (!token) return;
+    const res = await fetch("/api/landlord/bookings", {
+      method: "PATCH",
+      headers: { ...authHeader, "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId, status }),
+    }).catch(() => null);
+    if (res?.ok) {
+      setBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status } : b));
+    }
   };
 
   const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "L";
-  const unreadCount = messages.filter((m) => !m.read).length;
+  const unreadCount = convos.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
   const sidebarInner = (
     <>
@@ -504,66 +555,119 @@ export default function LandlordDashboardPage() {
             <>
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-                <p className="text-gray-500 text-sm mt-0.5">{unreadCount} unread message{unreadCount !== 1 ? "s" : ""} from tenants</p>
+                <p className="text-gray-500 text-sm mt-0.5">{unreadCount} unread from tenants</p>
               </div>
-              <div className="space-y-4">
-                {messages.map((m) => (
-                  <div key={m.id} className={`bg-white rounded-2xl border shadow-sm p-5 transition-colors ${!m.read ? "border-green-200 bg-green-50/30" : "border-gray-100"}`}>
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 text-sm flex-shrink-0">
-                        {m.tenant[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className="font-semibold text-gray-900 text-sm">{m.tenant}</p>
-                          <span className="text-xs text-gray-400">{m.time}</span>
-                        </div>
-                        <p className="text-xs text-green-600 mb-2">{m.property}</p>
-                        <p className="text-sm text-gray-700 leading-relaxed">{m.message}</p>
-
-                        {/* Reply shown */}
-                        {m.reply && (
-                          <div className="mt-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-                            <p className="text-xs text-gray-400 mb-1">Your reply:</p>
-                            <p className="text-sm text-gray-700">{m.reply}</p>
+              {loadingMsgs ? (
+                <div className="space-y-3">{[1,2].map(i => <div key={i} className="bg-white rounded-2xl border border-gray-100 h-24 animate-pulse" />)}</div>
+              ) : convos.length === 0 ? (
+                <div className="text-center py-16">
+                  <MessageSquare className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">No messages yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Tenants will message you from your property listings</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {convos.map(c => {
+                    const tenant = c.participants?.find(p => p.role === "tenant");
+                    const isOpen = activeConvo === c._id;
+                    return (
+                      <div key={c._id} className={`bg-white rounded-2xl border shadow-sm ${c.unreadCount > 0 ? "border-green-200" : "border-gray-100"}`}>
+                        <button onClick={() => setActiveConvo(isOpen ? null : c._id)} className="w-full text-left p-5">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm flex-shrink-0">
+                              {tenant?.name?.split(" ").map(n => n[0]).join("").slice(0, 2) || "T"}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-semibold text-gray-900 text-sm">{tenant?.name || "Tenant"}</p>
+                                {c.unreadCount > 0 && <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">{c.unreadCount}</span>}
+                              </div>
+                              <p className="text-xs text-gray-500">{c.property?.title}</p>
+                              {c.lastMessage && <p className="text-sm text-gray-500 truncate mt-0.5">{c.lastMessage}</p>}
+                            </div>
+                          </div>
+                        </button>
+                        {isOpen && (
+                          <div className="border-t border-gray-100 px-5 pb-4">
+                            <div className="max-h-60 overflow-y-auto py-3 space-y-2">
+                              {c.messages.map(m => {
+                                const isMine = m.sender?.toString() === (user as unknown as {_id: string})?._id?.toString();
+                                return (
+                                  <div key={m._id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                                    <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${isMine ? "bg-green-500 text-white" : "bg-gray-100 text-gray-800"}`}>
+                                      {m.content}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div className="flex gap-2 mt-2">
+                              <input value={replyText} onChange={e => setReplyText(e.target.value)}
+                                onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendReply(c._id)}
+                                placeholder="Type a reply..." className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                              <Button size="sm" onClick={() => sendReply(c._id)} disabled={sendingMsg}>
+                                <Send className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         )}
-
-                        {/* Reply input */}
-                        {replyingTo === m.id ? (
-                          <div className="mt-3 flex gap-2">
-                            <input
-                              autoFocus
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              onKeyDown={(e) => e.key === "Enter" && sendReply(m.id)}
-                              placeholder="Type your reply..."
-                              className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                            />
-                            <Button size="sm" onClick={() => sendReply(m.id)} disabled={!replyText.trim()}>
-                              <Send className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)}>Cancel</Button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => { setReplyingTo(m.id); setMessages((msgs) => msgs.map((x) => x.id === m.id ? { ...x, read: true } : x)); }}
-                            className="mt-3 text-xs text-green-600 font-semibold hover:text-green-700 flex items-center gap-1"
-                          >
-                            <Send className="w-3 h-3" /> {m.reply ? "Reply again" : "Reply"}
-                          </button>
-                        )}
                       </div>
-                      {!m.read && <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0 mt-1" />}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
 
-          {/* Other nav sections placeholder */}
-          {!["Overview", "Post Property", "My Properties", "Messages"].includes(activeNav) && (
+          {/* ── BOOKINGS ── */}
+          {activeNav === "Bookings" && (
+            <>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
+                <p className="text-gray-500 text-sm mt-0.5">Viewing requests from tenants</p>
+              </div>
+              {loadingBookings ? (
+                <div className="space-y-3">{[1,2].map(i => <div key={i} className="bg-white rounded-2xl border border-gray-100 h-28 animate-pulse" />)}</div>
+              ) : bookings.length === 0 ? (
+                <div className="text-center py-16">
+                  <Calendar className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">No bookings yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Tenants will book viewings from your property listings</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bookings.map(b => (
+                    <div key={b._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div>
+                          <p className="font-semibold text-gray-900">{b.property?.title}</p>
+                          <p className="text-sm text-gray-500 mt-0.5">Tenant: {b.tenant?.name}</p>
+                          {b.tenant?.phone && <p className="text-xs text-gray-400">{b.tenant.phone}</p>}
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-green-500" />{new Date(b.date).toLocaleDateString("en-GH", { day: "numeric", month: "short", year: "numeric" })}</span>
+                            <span>{b.time}</span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1 capitalize">{b.type} visit</p>
+                        </div>
+                        <Badge variant={b.status === "confirmed" ? "success" : b.status === "cancelled" ? "danger" : "warning"} className="capitalize flex-shrink-0">
+                          {b.status}
+                        </Badge>
+                      </div>
+                      {b.status === "pending" && (
+                        <div className="flex gap-2 mt-4">
+                          <Button size="sm" onClick={() => updateBookingStatus(b._id, "confirmed")}>Confirm</Button>
+                          <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={() => updateBookingStatus(b._id, "cancelled")}>Decline</Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Other sections */}
+          {!["Overview", "Post Property", "My Properties", "Messages", "Bookings"].includes(activeNav) && (
             <div className="text-center py-20">
               <p className="text-gray-400 text-sm">{activeNav} — coming soon</p>
             </div>
