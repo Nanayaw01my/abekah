@@ -100,6 +100,15 @@ export default function TenantDashboardPage() {
 
   const initials = user?.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "T";
 
+  // Load unread count on mount so badge shows immediately
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/tenant/messages", { headers: authHeader })
+      .then(r => r.json())
+      .then(d => setConvos(d.data || []))
+      .catch(() => {});
+  }, []);
+
   // Load properties
   useEffect(() => {
     fetch("/api/properties?limit=20&sortBy=newest")
@@ -257,7 +266,9 @@ export default function TenantDashboardPage() {
               <span className="ml-auto text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">{savedIds.size}</span>
             )}
             {label === "Messages" && totalUnread > 0 && (
-              <span className="ml-auto w-2 h-2 bg-green-500 rounded-full" />
+              <span className="ml-auto min-w-[20px] h-5 bg-green-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                {totalUnread > 99 ? "99+" : totalUnread}
+              </span>
             )}
           </button>
         ))}
