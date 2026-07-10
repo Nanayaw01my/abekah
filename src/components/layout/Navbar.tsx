@@ -15,6 +15,9 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const isLoggedIn = !!user;
   const isHome = pathname === "/";
+  const isAuthPage = pathname.startsWith("/auth");
+
+  if (isAuthPage) return null;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
