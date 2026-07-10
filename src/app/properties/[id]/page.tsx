@@ -7,11 +7,12 @@ import {
   MapPin, Bed, Bath, Maximize2, Car, Heart, BadgeCheck, Phone,
   MessageSquare, Calendar, Share2, ChevronLeft, ChevronRight,
   Wifi, Zap, Droplets, Shield, PawPrint, Sofa, AirVent,
-  Dumbbell, Waves, WashingMachine, Eye, Send,
+  Dumbbell, Waves, WashingMachine, Eye, Send, CheckCircle,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useAuth } from "@/context/AuthContext";
 
 interface Property {
   _id: string;
@@ -66,6 +67,10 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [activeTab, setActiveTab] = useState<"overview" | "amenities">("overview");
   const [showBooking, setShowBooking] = useState(false);
   const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState("");
+  const { user } = useAuth();
 
   useEffect(() => {
     fetch(`/api/properties/${id}`)
@@ -95,6 +100,28 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
   const landlord = property.landlord;
   const images = property.images?.length ? property.images : ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800"];
+
+  const sendMessage = async () => {
+    if (!message.trim()) return;
+    if (!user) { setSendError("Please log in to send a message."); return; }
+    if (!landlord?._id) { setSendError("Landlord information not available."); return; }
+    setSending(true);
+    setSendError("");
+    const token = localStorage.getItem("rf_token");
+    const res = await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ landlordId: landlord._id, propertyId: property._id, content: message }),
+    }).catch(() => null);
+    setSending(false);
+    if (res?.ok) {
+      setSent(true);
+      setMessage("");
+      setTimeout(() => setSent(false), 4000);
+    } else {
+      setSendError("Failed to send. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -248,7 +275,11 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="space-y-3 mb-4">
-                <Button className="w-full" size="lg">
+                <Button className="w-full" size="lg" onClick={() => {
+                  const el = document.getElementById("quick-message");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                  el?.focus();
+                }}>
                   <MessageSquare className="w-4 h-4" /> Send Message
                 </Button>
                 {landlord?.phone && (
@@ -283,11 +314,40 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               )}
 
               <div className="border-t border-gray-100 pt-4">
-                <h4 className="font-semibold text-gray-900 text-sm mb-2">Quick Message</h4>
-                <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)}
+                <h4 className="font-semibold text-gray-900 text-sm mb-2">Message Landlord</h4>
+
+                {sent && (
+                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-xl px-3 py-2.5 mb-2 text-sm">
+                    <CheckCircle className="w-4 h-4 flex-shrink-0" /> Message sent! Check your Messages tab.
+                  </div>
+                )}
+                {sendError && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-3 py-2.5 mb-2 text-sm">{sendError}</div>
+                )}
+
+                <textarea
+                  id="quick-message"
+                  rows={3}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   placeholder="Hi, I'm interested in this property..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
-                <Button className="w-full mt-2" size="sm"><Send className="w-3.5 h-3.5" /> Send</Button>
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                />
+                <Button
+                  className="w-full mt-2"
+                  size="sm"
+                  onClick={sendMessage}
+                  disabled={sending || !message.trim()}
+                  loading={sending}
+                >
+                  <Send className="w-3.5 h-3.5" /> {sending ? "Sending..." : "Send Message"}
+                </Button>
+
+                {!user && (
+                  <p className="text-xs text-center text-gray-400 mt-2">
+                    <Link href="/auth/login" className="text-green-600 font-medium">Log in</Link> to message this landlord
+                  </p>
+                )}
               </div>
             </div>
 
