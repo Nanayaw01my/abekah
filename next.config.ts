@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com" },
     ],
   },
-  serverExternalPackages: ["mongoose"],
+  serverExternalPackages: ["mongoose", "cloudinary"],
 };
 
 export default nextConfig;
