@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, AlertCircle, User, Phone } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, User, Phone, Home, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/context/AuthContext";
@@ -70,7 +70,7 @@ export default function LoginPage() {
             {/* Login Form */}
             {tab === "login" && (
               <>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome Back 👋</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome Back</h1>
                 <p className="text-gray-500 text-sm mb-6">Login to continue</p>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <Input
@@ -127,7 +127,10 @@ export default function LoginPage() {
                           : "border-gray-200 text-gray-500 hover:border-green-300"
                       }`}
                     >
-                      {r === "tenant" ? "🏠 I'm a Tenant" : "🏢 I'm a Landlord"}
+                      <span className="flex items-center justify-center gap-1.5">
+                        {r === "tenant" ? <Home className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+                        {r === "tenant" ? "I'm a Tenant" : "I'm a Landlord"}
+                      </span>
                     </button>
                   ))}
                 </div>

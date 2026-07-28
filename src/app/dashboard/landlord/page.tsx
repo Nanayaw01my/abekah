@@ -298,7 +298,7 @@ export default function LandlordDashboardPage() {
             <>
               <div className="hidden lg:flex items-center justify-between mb-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.name?.split(" ")[0] || "there"} 👋</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.name?.split(" ")[0] || "there"}</h1>
                   <p className="text-gray-500 text-sm">Manage your properties and tenant messages</p>
                 </div>
                 <div className="flex items-center gap-3">

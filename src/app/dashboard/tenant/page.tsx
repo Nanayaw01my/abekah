@@ -315,7 +315,7 @@ export default function TenantDashboardPage() {
             <>
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 17 ? "Afternoon" : "Evening"}, {user?.name?.split(" ")[0] || "there"} 👋
+                  Good {new Date().getHours() < 12 ? "Morning" : new Date().getHours() < 17 ? "Afternoon" : "Evening"}, {user?.name?.split(" ")[0] || "there"}
                 </h1>
                 <p className="text-gray-500 text-sm mt-0.5">Browse available properties for rent across Ghana</p>
               </div>

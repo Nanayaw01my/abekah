@@ -7,7 +7,7 @@ const stats = [
   { value: "10K+", label: "Happy Users", icon: Users, color: "bg-green-100 text-green-600" },
   { value: "2K+", label: "Verified Landlords", icon: BadgeCheck, color: "bg-blue-100 text-blue-600" },
   { value: "5K+", label: "Properties Listed", icon: Home, color: "bg-amber-100 text-amber-600" },
-  { value: "4.8★", label: "Average Rating", icon: Star, color: "bg-purple-100 text-purple-600" },
+  { value: "4.8", label: "Average Rating", icon: Star, color: "bg-purple-100 text-purple-600" },
   { value: "100%", label: "Safe & Verified", icon: Shield, color: "bg-rose-100 text-rose-600" },
 ];
 
