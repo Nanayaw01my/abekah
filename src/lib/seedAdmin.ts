@@ -20,7 +20,15 @@ export async function seedAdmin() {
 
   const email = process.env.ADMIN_EMAIL?.toLowerCase().trim();
   const password = process.env.ADMIN_PASSWORD;
+
+  // Always report state on the first run — a silent no-op here is impossible
+  // to tell apart from the code not being deployed at all.
+  console.log(
+    `[seedAdmin] check: ADMIN_EMAIL=${email ? "set" : "MISSING"} ADMIN_PASSWORD=${password ? `set (${password.length} chars)` : "MISSING"}`
+  );
+
   if (!email || !password) {
+    console.log("[seedAdmin] skipped — set ADMIN_EMAIL and ADMIN_PASSWORD to enable");
     seeded = true;
     return;
   }
@@ -41,6 +49,8 @@ export async function seedAdmin() {
         existing.suspended = false;
         await existing.save();
         console.log(`[seedAdmin] Synced admin account: ${email}`);
+      } else {
+        console.log(`[seedAdmin] Admin account already up to date: ${email}`);
       }
     } else {
       await User.create({
