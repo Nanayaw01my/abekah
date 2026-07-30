@@ -117,7 +117,7 @@ export default function AdminDashboard() {
   };
 
   const verifyProperty = async (id: string, verified: boolean) => {
-    const r = await fetch(`/api/properties/${id}`, { method: "PATCH", headers: authHeaders(), body: JSON.stringify({ verified: !verified }) });
+    const r = await fetch("/api/admin/properties", { method: "PATCH", headers: authHeaders(), body: JSON.stringify({ id, verified: !verified }) });
     if (r.ok) { showToast(verified ? "Property unverified" : "Property verified"); loadProperties(); }
     else showToast("Action failed", "error");
   };

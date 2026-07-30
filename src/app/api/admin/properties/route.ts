@@ -34,6 +34,17 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ properties, total, page, pages: Math.ceil(total / limit) });
 }
 
+export async function PATCH(req: NextRequest) {
+  const admin = await requireAdmin(req);
+  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { id, verified } = await req.json();
+  if (!id) return NextResponse.json({ error: "Property ID required" }, { status: 400 });
+
+  await Property.findByIdAndUpdate(id, { verified: !!verified });
+  return NextResponse.json({ success: true });
+}
+
 export async function DELETE(req: NextRequest) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

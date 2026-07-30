@@ -28,7 +28,9 @@ export async function POST(req: NextRequest) {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      role: role || "tenant",
+      // Public signup can only create tenants or landlords — admin accounts
+      // are created through /api/admin/setup, which requires a server secret.
+      role: role === "landlord" ? "landlord" : "tenant",
       phone: phone?.trim(),
     });
 

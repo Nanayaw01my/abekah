@@ -9,6 +9,7 @@ export interface IUser extends Document {
   phone?: string;
   verified: boolean;
   emailVerified: boolean;
+  suspended: boolean;
   bio?: string;
   favorites: mongoose.Types.ObjectId[];
   provider?: string;
@@ -27,6 +28,7 @@ const UserSchema = new Schema<IUser>(
     phone: { type: String },
     verified: { type: Boolean, default: false },
     emailVerified: { type: Boolean, default: false },
+    suspended: { type: Boolean, default: false },
     bio: { type: String },
     favorites: [{ type: Schema.Types.ObjectId, ref: "Property" }],
     provider: { type: String },
