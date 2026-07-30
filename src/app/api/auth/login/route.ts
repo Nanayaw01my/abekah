@@ -3,10 +3,12 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/jwt";
+import { seedAdmin } from "@/lib/seedAdmin";
 
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
+    await seedAdmin();
     const { email, password } = await req.json();
 
     if (!email || !password) {
